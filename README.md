@@ -191,7 +191,7 @@ uvx pytest                          # no sway, LACT or dependencies needed
 ```
 
 The version comes from git tags. Pushing a `v*` tag runs the tests and publishes a GitHub
-Release with the wheel and sdist (the AUR package builds from that sdist).
+Release with the wheel and sdist.
 
 ## License
 
