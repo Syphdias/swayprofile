@@ -1,0 +1,28 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write  # create the GitHub Release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # hatch-vcs derives the version from the tag
+      - uses: astral-sh/setup-uv@v6
+      - run: uvx ruff check .
+      - run: uvx pytest
+      - run: uv build
+      - name: Check the built version matches the tag
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          ls "dist/swayprofile-${version}-py3-none-any.whl" "dist/swayprofile-${version}.tar.gz"
+      - name: Publish the wheel and sdist as a GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "swayprofile ${GITHUB_REF_NAME#v}" --generate-notes

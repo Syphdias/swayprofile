@@ -1,0 +1,85 @@
+# swayprofile configuration (~/.config/swayprofile/profiles.toml)
+#
+# Profile precedence: manual pin > window rule > idle > default.
+# Only power-profiles-daemon switching is active out of the box; refresh rates,
+# GPU (LACT), do-not-disturb and hooks are commented out below.
+# After editing: `swayprofile reload` (or restart the service).
+
+default = "normal"
+cycle = ["eco", "normal", "gaming"]   # order for `swayprofile cycle` (waybar left click)
+exit_delay = 60                       # seconds to keep a rule's profile after its last window closed
+hook_timeout = 60                     # seconds before on_enter/on_exit commands are killed
+notify_manual = true                  # notify on manual and default switches
+
+# Output settings a profile does not override come from this file (sway `output`
+# blocks, as written by nwg-displays). Without it, outputs not overridden by the
+# profile are left as they are.
+outputs_file = "~/.config/sway/outputs"
+
+# inhibit_idle value restored on game windows when leaving a profile with inhibit_idle.
+inhibit_idle_revert = "fullscreen"
+
+# Do-not-disturb: "auto" (whichever of swaync, dunst, mako is running), one of
+# those names, or "none". mako needs a `[mode=do-not-disturb]` section (e.g.
+# `invisible=1`) in its config.
+dnd_backend = "auto"
+
+[idle]
+enabled = true
+timeout = 120        # seconds; runs its own swayidle, your swayidle/lock setup is untouched
+profile = "eco"
+notify = true
+
+[lact]
+# GPU control via LACT (https://github.com/ilya-zlobintsev/LACT). It changes
+# power limits, so it is off until you enable it. Setup:
+#   1. add `lact = { ... }` tables to the profiles below
+#   2. swayprofile lact-sync --dry-run   (review the LACT profiles it would create)
+#   3. swayprofile lact-sync             (create them)
+#   4. enabled = true, then `swayprofile reload`
+# Talking to lactd requires access to its socket (usually the `wheel` group).
+enabled = false
+socket = "/run/lactd.sock"
+# gpu = "<vendor:device-subsystem-pci address>"   # only needed with several GPUs  @init-config:gpu
+prefix = "swayprofile-"   # names of the LACT profiles swayprofile manages
+
+# Window rules: `match` is a regex matched (fully) against a window's app_id and X11 class.
+[[rule]]
+name = "game"
+match = 'steam_app_\d+|gamescope'
+profile = "gaming"
+# exit_delay = 60
+# notify = true
+
+# Per-profile keys:
+#   icon, icon_pinned   waybar text while selected automatically / pinned
+#   power_profile       power-saver | balanced | performance
+#   outputs.<NAME>      { refresh = Hz, resolution = "WxH", adaptive_sync = bool, enabled = bool }
+#                       NAME is the connector (DP-1) or "Make Model Serial"; see `swaymsg -t get_outputs`
+#   lact                LACT GpuConfig fields overlaid on LACT's default config, e.g.
+#                       { power_cap = 200.0, performance_level = "manual", power_profile_mode_index = 2 }
+#   dnd                 true: do-not-disturb on (the previous state is restored when leaving)
+#   inhibit_idle        true: `inhibit_idle open` on windows matched by rules for this profile
+#   on_enter, on_exit   lists of shell commands
+
+[profiles.eco]
+icon = "eco"
+power_profile = "power-saver"
+# outputs.DP-1 = { refresh = 60 }   @init-config:outputs:min
+# lact = { power_cap = 150.0, performance_level = "manual", power_profile_mode_index = 2 }   # 2 = POWER_SAVING (AMD)
+
+[profiles.normal]
+icon = "normal"
+power_profile = "balanced"
+# outputs: from outputs_file
+# lact = { performance_level = "auto" }
+
+[profiles.gaming]
+icon = "gaming"
+power_profile = "performance"
+# outputs.DP-1 = { refresh = 144 }   @init-config:outputs:max
+# lact = { performance_level = "manual", power_profile_mode_index = 1 }   # 1 = 3D_FULL_SCREEN (AMD)
+# dnd = true
+# inhibit_idle = true
+# on_enter = ["notify-send 'have fun'"]
+# on_exit = []

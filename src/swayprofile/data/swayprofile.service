@@ -1,0 +1,16 @@
+# Written by `swayprofile install-service`.
+[Unit]
+Description=swayprofile - sway power/performance profile daemon
+PartOf=graphical-session.target
+After=graphical-session.target
+Requisite=graphical-session.target
+# Only in sway sessions (sway imports SWAYSOCK into the systemd user environment).
+ConditionEnvironment=SWAYSOCK
+
+[Service]
+ExecStart=@EXEC@ daemon
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target
