@@ -672,3 +672,17 @@ def test_lact_verification_skipped_when_superseded(tmp_path, monkeypatch, caplog
     assert calls == ["set_profile"]
     assert d.last_errors == []
     assert "superseded by normal" in caplog.text
+
+
+def test_idle_watcher_ignores_user_swayidle_config(tmp_path, monkeypatch):
+    # swayidle merges ~/.config/swayidle/config with CLI events; without -C the
+    # user's lock/DPMS timeouts would run a second time from our instance.
+    calls = []
+
+    async def fake_exec(*args, **kwargs):
+        calls.append(args)
+        raise FileNotFoundError
+
+    monkeypatch.setattr(daemon.asyncio, "create_subprocess_exec", fake_exec)
+    asyncio.run(make_daemon(tmp_path).idle_watcher())
+    assert calls[0][:3] == ("swayidle", "-C", "/dev/null")

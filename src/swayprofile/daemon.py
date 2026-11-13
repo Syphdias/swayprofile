@@ -469,8 +469,12 @@ class Daemon:
             return
         while True:
             try:
+                # -C /dev/null: swayidle always loads the user's swayidle config in
+                # addition to CLI events, which would run their lock/DPMS commands twice.
                 self.idle_proc = await asyncio.create_subprocess_exec(
                     "swayidle",
+                    "-C",
+                    "/dev/null",
                     "timeout",
                     str(self.cfg.idle_timeout),
                     "echo idle",
